@@ -6,27 +6,99 @@ on:
       - 'v*'
 
 jobs:
-  release:
+  build-windows:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
-
       - name: Build
         run: cargo build --release
-
-      - name: Upload artifact
+      - name: Upload
         uses: actions/upload-artifact@v4
         with:
-          name: quote-replacer
+          name: quote-replacer-windows
           path: target/release/quote_replacer.exe
 
-      - name: Create Release
-        if: github.event_name == 'push'
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build
+        run: cargo build --release
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: quote-replacer-macos
+          path: target/release/quote_replacer
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+      - name: Build
+        run: cargo build --release
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: quote-replacer-linux
+          path: target/release/quote_replacer
+
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Android SDK
+        uses: android-actions/setup-android@latest
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Add Android target
+        run: rustup target add aarch64-linux-android
+      - name: Install NDK
+        run: sdkmanager "ndk;$NDK_VERSION"
+        env:
+          NDK_VERSION: "r26c"
+      - name: Build
         run: |
-          $tag = $env:GITHUB_REF -replace 'refs/tags/', ''
-          gh release create "$tag" --title "Quote Replacer $tag" --notes "First release"
+          $env:ANDROID_NDK_HOME="$env:ANDROID_HOME/ndk/$env:NDK_VERSION"
+          cargo build --release --target aarch64-linux-android
+      - name: Create APK
+        run: |
+          $lib = "target/aarch64-linux-android/release/libquote_replacer.so"
+          $dir = "android-lib"
+          mkdir $dir
+          copy-item $lib "$dir\lib.so"
+          7z a -tzip quote-replacer.apk "$dir"
+          move-item "quote_replacer.apk" "target/aarch64-linux-android/release/"
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: quote-replacer-android
+          path: target/aarch64-linux-android/release/quote_replacer.apk
+
+  create-release:
+    needs: [build-windows, build-macos, build-linux, build-android]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - name: Create Release
+        run: |
+          tag=${GITHUB_REF#refs/tags/}
+          gh release create $tag --title "Quote Replacer $tag" --notes "Multi-platform release" --draft
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload artifacts
+        run: |
+          tag=${GITHUB_REF#refs/tags/}
+          for f in artifacts/*/*; do
+            gh release upload "$tag" "$f" --clobber
+          done

@@ -1,15 +1,17 @@
 [package]
 name = "quote_replacer"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-eframe = "0.29"
-enigo = "0.3"
-lazy_static = "1.4"
+eframe = { version = "0.29", default-features = false, features = ["default_fonts", "glow"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 dirs = "5.0"
+
+[target.'cfg(not(target_os = "android"))'.dependencies]
+enigo = "0.3"
+lazy_static = "1.4"
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.58", features = [
@@ -18,3 +20,11 @@ windows = { version = "0.58", features = [
     "Win32_System_LibraryLoader",
     "Win32_System_Threading"
 ] }
+
+[lib]
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1

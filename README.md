@@ -1,16 +1,19 @@
 # Quote Replacer
 
-一个用于字符替换的桌面工具，支持中英文标点符号互转、键盘Hook实时替换功能。
+A cross-platform character replacement tool with GUI, supports Chinese/English punctuation conversion and keyboard hook real-time replacement.
 
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
+![Platform](https://img.shields.io/badge/platform-macOS-red)
+![Platform](https://img.shields.io/badge/platform-Linux-orange)
+![Platform](https://img.shields.io/badge/platform-Android-green)
 ![Rust](https://img.shields.io/badge/Rust-1.70%2B-orange)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-## 功能特性
+## Features
 
-- **文本替换工具**：输入文本，一键转换为目标格式
-- **字符映射配置**：可自定义字符映射规则，添加/删除/重置
-- **键盘Hook**：开启后，在任意应用中按住 Alt + 对应键可自动替换为映射字符
+- **Text Replacement Tool**: Input text and convert to target format with one click
+- **Character Mapping Config**: Customizable character mapping rules, add/delete/reset
+- **Keyboard Hook**: After enabling, hold Alt + corresponding key to auto-replace
   - `Alt + ,` → `,`
   - `Alt + .` → `.`
   - `Alt + /` → `/`
@@ -21,10 +24,10 @@
   - `Alt + \` → `` ` ``
   - `Alt + '` → `'`
 
-## 默认映射规则
+## Default Mappings
 
-| 原字符 | 替换为 |
-|--------|--------|
+| From | To |
+|------|-----|
 | 「 | " |
 | 」 | " |
 | 『 | ' |
@@ -45,62 +48,67 @@
 | ～ | ~ |
 | · | ` |
 
-## 安装
+## Installation
 
-### 预构建版本
+### Pre-built
 
-从 [Releases](https://github.com/anomalyco/quote-replacer/releases) 下载最新版本的 `quote_replacer.exe`
+Download from [Releases](https://github.com/lilyco-42/quote-replacer/releases)
 
-### 从源码构建
+### Build from Source
 
 ```bash
-# 克隆仓库
-git clone https://github.com/anomalyco/quote-replacer.git
+# Clone
+git clone https://github.com/lilyco-42/quote-replacer.git
 cd quote-replacer
 
-# 构建
+# Build (Windows/Linux/macOS)
 cargo build --release
 
-# 运行
-./target/release/quote_replacer.exe
+# Or build for Android (requires Android SDK)
+cargo apk build --release
+
+# Run
+./target/release/quote_replacer
 ```
 
-## 使用说明
+## Usage
 
-### 替换工具
+### Replace Tool
 
-1. 打开应用，默认显示"替换工具"标签页
-2. 在左侧文本框输入要替换的文本
-3. 点击"全部替换"按钮
-4. 点击"复制结果"复制到剪贴板
+1. Open app, default shows "替换工具" tab
+2. Enter text in input box
+3. Click "全部替换" (Replace All)
+4. Click "复制结果" (Copy Result)
 
-### 映射配置
+### Mapping Config
 
-1. 点击"映射配置"标签页
-2. 可查看当前所有映射规则
-3. 点击"添加"添加新映射，输入原字符和替换值
-4. 点击"删除"删除不需要的映射
-5. 点击"重置为默认"恢复内置默认规则
+1. Click "映射配置" tab
+2. View all mappings
+3. Click "添加" to add new mapping
+4. Click "删除" to remove mapping
+5. Click "重置为默认" to restore defaults
 
-### 键盘Hook
+### Keyboard Hook (Windows only)
 
-1. 在顶部工具栏点击"开启"按钮启用Hook
-2. 按住 `Alt` 键并按键盘上的特定按键
-3. 会自动输入对应的替换字符
+1. Click "开启" in toolbar
+2. Hold Alt + key to auto-replace
 
-> 注意：键盘Hook功能需要以管理员权限运行程序。
+> Note: Keyboard hook requires running as Administrator on Windows.
 
-## 配置文件
+## Config File
 
-映射配置保存在：
+Mappings saved to:
 - Windows: `%APPDATA%\quote_replacer\mappings.json`
+- macOS: `~/Library/Application Support/quote_replacer/mappings.json`
+- Linux: `~/.config/quote_replacer/mappings.json`
 
-## 技术栈
+## Tech Stack
 
 - [eframe](https://github.com/emilk/egui) - Pure Rust GUI
-- [enigo](https://github.com/whitelynx/enigo) - 键盘/鼠标模拟
+- [enigo](https://github.com/whitelynx/enigo) - Keyboard/Mouse simulation
 - [windows-rs](https://github.com/microsoft/windows-rs) - Windows API
+- [cargo-apk](https://github.com/nicbarker/cargo-apk) - Android APK build
 
-## 许可证
+## License
 
 MIT License
