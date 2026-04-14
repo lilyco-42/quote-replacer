@@ -53,8 +53,29 @@ jobs:
           name: quote-replacer-linux
           path: target/release/quote_replacer
 
+  build-android:
+    runs-on: ubuntu-latest
+    container: ghcr.io/nickel-lang/rust-android:v0.21.0
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          cargo build --release --target aarch64-linux-android
+          cargo build --release --target armv7-linux-androideabi
+      - name: Create lib dir
+        run: |
+          mkdir -p android-libs/arm64-v8a
+          mkdir -p android-libs/armeabi-v7a
+          cp target/aarch64-linux-android/release/libquote_replacer.so android-libs/arm64-v8a/
+          cp target/armv7-linux-androideabi/release/libquote_replacer.so android-libs/armeabi-v7a/
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: quote-replacer-android
+          path: android-libs
+
   create-release:
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-windows, build-macos, build-linux, build-android]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +86,7 @@ jobs:
       - name: Create Release
         run: |
           tag=${GITHUB_REF#refs/tags/}
-          gh release create "$tag" --title "Quote Replacer $tag" --notes "Multi-platform release"
+          gh release create "$tag" --title "Quote Replacer $tag" --notes "Multi-platform release (Windows/macOS/Linux/Android)"
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Upload artifacts
