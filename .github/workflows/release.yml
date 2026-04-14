@@ -50,40 +50,8 @@ jobs:
           name: quote-replacer-linux
           path: target/release/quote_replacer
 
-  build-android:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Install Android SDK
-        uses: android-actions/setup-android@latest
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Add Android target
-        run: rustup target add aarch64-linux-android
-      - name: Install NDK
-        run: sdkmanager "ndk;$NDK_VERSION"
-        env:
-          NDK_VERSION: "r26c"
-      - name: Build
-        run: |
-          $env:ANDROID_NDK_HOME="$env:ANDROID_HOME/ndk/$env:NDK_VERSION"
-          cargo build --release --target aarch64-linux-android
-      - name: Create APK
-        run: |
-          $lib = "target/aarch64-linux-android/release/libquote_replacer.so"
-          $dir = "android-lib"
-          mkdir $dir
-          copy-item $lib "$dir\lib.so"
-          7z a -tzip quote-replacer.apk "$dir"
-          move-item "quote_replacer.apk" "target/aarch64-linux-android/release/"
-      - name: Upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: quote-replacer-android
-          path: target/aarch64-linux-android/release/quote_replacer.apk
-
   create-release:
-    needs: [build-windows, build-macos, build-linux, build-android]
+    needs: [build-windows, build-macos, build-linux]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
@@ -93,7 +61,7 @@ jobs:
       - name: Create Release
         run: |
           tag=${GITHUB_REF#refs/tags/}
-          gh release create $tag --title "Quote Replacer $tag" --notes "Multi-platform release" --draft
+          gh release create $tag --title "Quote Replacer $tag" --notes "Multi-platform release (Windows/macOS/Linux)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload artifacts
