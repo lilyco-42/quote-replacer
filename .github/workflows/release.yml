@@ -75,9 +75,16 @@ jobs:
           mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
         env:
           ANDROID_HOME: /opt/android-sdk
+      - name: Accept licenses
+        run: |
+          mkdir -p $ANDROID_HOME/licenses
+          echo "24333f8a60b5efb7e6bef27410e80caf2" > $ANDROID_HOME/licenses/android-sdk-license
+          echo "84831b9409646a918e30573bab4c9c46" >> $ANDROID_HOME/licenses/android-sdk-license
+          echo "8933bad161af4178b1185d1a37fbf41ea5269c55" >> $ANDROID_HOME/licenses/android-sdk-license
+          echo "d56f5187479451eabf01fb78af8d351e6a49bc87" >> $ANDROID_HOME/licenses/android-sdk-license
+          echo "601085b94cd77f0b54ff86406957070ebe2f51e9" >> $ANDROID_HOME/licenses/android-sdk-license
       - name: Install SDK components
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-34" "ndk;26.1.10909112"
         env:
           ANDROID_HOME: /opt/android-sdk
