@@ -55,33 +55,10 @@ jobs:
 
   build-android:
     runs-on: ubuntu-latest
+    container: ghcr.io/nickel-lang/rust-android:v0.21.0
     steps:
       - uses: actions/checkout@v4
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-      - name: Install Android SDK
-        run: |
-          mkdir -p $ANDROID_HOME/cmdline-tools
-          cd $ANDROID_HOME/cmdline-tools
-          curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdline-tools.zip
-          unzip -q cmdline-tools.zip
-          mv cmdline-tools latest
-      - name: Install SDK components
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "ndk;26.1.10909112"
-        env:
-          ANDROID_HOME: /opt/android-sdk
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
-      - name: Add Android targets
-        run: rustup target add aarch64-linux-android armv7-linux-androideabi
       - name: Build
-        env:
-          ANDROID_NDK_HOME: /opt/android-sdk/ndk/26.1.10909112
         run: |
           cargo build --release --target aarch64-linux-android
           cargo build --release --target armv7-linux-androideabi
@@ -109,7 +86,7 @@ jobs:
       - name: Create Release
         run: |
           tag=${GITHUB_REF#refs/tags/}
-          gh release create "$tag" --title "Quote Replacer $tag" --notes "Multi-platform release"
+          gh release create "$tag" --title "Quote Replacer $tag" --notes "Multi-platform release" --draft
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload artifacts
