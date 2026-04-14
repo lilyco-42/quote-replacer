@@ -22,7 +22,12 @@ windows = { version = "0.58", features = [
 ] }
 
 [lib]
-crate-type = ["staticlib", "cdylib", "rlib"]
+name = "quote_replacer"
+crate-type = ["cdylib", "rlib"]
+
+[package.metadata.android]
+package = "com.quotereplacer.app"
+build_targets = ["aarch64-linux-android", "armv7-linux-androideabi"]
 
 [profile.release]
 opt-level = "z"
