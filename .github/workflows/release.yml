@@ -67,10 +67,12 @@ jobs:
           tag=${GITHUB_REF#refs/tags/}
           gh release create "$tag" --title "Quote Replacer $tag" --notes "Multi-platform release"
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
       - name: Upload artifacts
         run: |
           tag=${GITHUB_REF#refs/tags/}
           for f in artifacts/*/*; do
             gh release upload "$tag" "$f" --clobber
           done
+        env:
+          GH_TOKEN: ${{ github.token }}
