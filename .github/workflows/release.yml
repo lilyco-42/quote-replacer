@@ -50,8 +50,63 @@ jobs:
           name: quote-replacer-linux
           path: target/release/quote_replacer
 
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+      - name: Install Android SDK
+        run: |
+          mkdir -p $ANDROID_HOME/cmdline-tools
+          cd $ANDROID_HOME/cmdline-tools
+          curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdline-tools.zip
+          unzip -q cmdline-tools.zip
+          mv cmdline-tools latest
+      - name: Install NDK
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
+        env:
+          ANDROID_HOME: /opt/android-sdk
+      - name: Install NDK
+        run: $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;26.1.10909112"
+        env:
+          ANDROID_HOME: /opt/android-sdk
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+      - name: Add Android target
+        run: rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android i686-linux-android
+      - name: Set NDK version
+        run: echo "NDK_VERSION=26.1.10909112" >> $GITHUB_ENV
+      - name: Build
+        run: |
+          export ANDROID_NDK_HOME=$ANDROID_HOME/ndk/$NDK_VERSION
+          cargo build --release --target aarch64-linux-android
+          cargo build --release --target armv7-linux-androideabi
+          cargo build --release --target x86_64-linux-android
+      - name: Create APK directory
+        run: |
+          mkdir -p android-lib/app/src/main/jniLibs/arm64-v8a
+          mkdir -p android-lib/app/src/main/jniLibs/armeabi-v7a
+          mkdir -p android-lib/app/src/main/jniLibs/x86_64
+          mkdir -p android-lib/app/src/main/jniLibs/x86
+          cp target/aarch64-linux-android/release/libquote_replacer.so android-lib/app/src/main/jniLibs/arm64-v8a/
+          cp target/armv7-linux-androideabi/release/libquote_replacer.so android-lib/app/src/main/jniLibs/armeabi-v7a/
+          cp target/x86_64-linux-android/release/libquote_replacer.so android-lib/app/src/main/jniLibs/x86_64/
+      - name: Create APK
+        run: |
+          cd android-lib
+          zip -r ../app.apk app/
+          cd ..
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: quote-replacer-android
+          path: app.apk
+
   create-release:
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-windows, build-macos, build-linux, build-android]
     runs-on: ubuntu-latest
     steps:
       - name: Download all artifacts
@@ -61,7 +116,7 @@ jobs:
       - name: Create Release
         run: |
           tag=${GITHUB_REF#refs/tags/}
-          gh release create $tag --title "Quote Replacer $tag" --notes "Multi-platform release (Windows/macOS/Linux)"
+          gh release create $tag --title "Quote Replacer $tag" --notes "Multi-platform release (Windows/macOS/Linux/Android)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload artifacts
