@@ -55,6 +55,7 @@ jobs:
 
   build-android:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - name: Set up JDK 17
@@ -62,17 +63,22 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - name: Install Android SDK
+      - name: Download Android SDK
         run: |
           mkdir -p $ANDROID_HOME/cmdline-tools
-          cd $ANDROID_HOME/cmdline-tools
-          curl -sL https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip -o cmdline-tools.zip
-          unzip -q cmdline-tools.zip
-          mv cmdline-tools latest
+          cd /tmp
+          for i in 1 2 3; do
+            curl -sL -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip && break
+            sleep 5
+          done
+          unzip -q cmdline-tools.zip -d $ANDROID_HOME/cmdline-tools
+          mv $ANDROID_HOME/cmdline-tools/cmdline-tools $ANDROID_HOME/cmdline-tools/latest
+        env:
+          ANDROID_HOME: /opt/android-sdk
       - name: Install SDK components
         run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null 2>&1 || true
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "platforms;android-34" "ndk;26.1.10909112"
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME --licenses || true
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "platforms;android-34" "ndk;26.1.10909112"
         env:
           ANDROID_HOME: /opt/android-sdk
       - name: Install Rust
@@ -109,7 +115,7 @@ jobs:
       - name: Create Release
         run: |
           tag=${GITHUB_REF#refs/tags/}
-          gh release create "$tag" --title "Quote Replacer $tag" --notes "Multi-platform release"
+          gh release create "$tag" --title "Quote Replacer $tag" --notes "Multi-platform release with Android support"
         env:
           GH_TOKEN: ${{ github.token }}
       - name: Upload artifacts

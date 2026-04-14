@@ -608,11 +608,14 @@ fn main() {
 #[cfg(target_os = "android")]
 mod android {
     use jni::objects::JClass;
+    use jni::objects::JObject;
     use jni::sys::jint;
-    use jni::JNIEnv;
 
     #[no_mangle]
-    pub extern "C" fn Java_com_quotereplacer_MainActivity_init(env: JNIEnv, class: JClass) -> jint {
+    pub extern "C" fn Java_com_quotereplacer_MainActivity_init(
+        _env: JObject,
+        _class: JClass,
+    ) -> jint {
         0
     }
 }
